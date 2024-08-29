@@ -13,7 +13,7 @@
 ;; display descriptions from (.acceptsAll [..] "description"), but this doesn't work well
 ;; with graalvm. joptsimple bundles help formatter locales in jar/resource and those
 ;; are not accessible by graalvm compiler. Instead of that, just use simple hardcoded help.
-(defn- help [^OptionParser op]
+(defn- help [^OptionParser _]
   (println
    (str
     (if-graalvm
