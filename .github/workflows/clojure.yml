@@ -11,7 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: Install dependencies
       run: lein deps
+
+    - name: Run code lint
+      run: make lint
+
     - name: Run tests
-      run: make lint test
+      run: make test
