@@ -13,6 +13,7 @@ all: test uberjar
 
 clean: ## clean compiled files
 	$(LEIN) clean
+	$(RM) $(BINARY) $(BINARY).build_artifacts.txt
 
 uberjar: ## create uberjar
 	$(LEIN) uberjar
@@ -33,9 +34,6 @@ binary: ## create binary by using graalvm
 binary: uberjar-graalvm
 	$(NATIVE_IMAGE) \
 	--report-unsupported-elements-at-runtime \
-	--initialize-at-run-time=org.apache.logging.log4j.core.pattern.JAnsiTextRenderer \
-	--initialize-at-run-time=org.apache.logging.log4j.core.async.AsyncLoggerContext \
-	--initialize-at-run-time=com.jcraft.jsch.agentproxy.connector.PageantConnector$User32 \
 	--initialize-at-run-time=com.sun.jna.platform.win32.User32 \
 	--initialize-at-run-time=com.sun.jna.platform.win32.Kernel32 \
 	--no-server \
