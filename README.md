@@ -10,7 +10,8 @@ $ java -jar jarbloat.jar [options] <app.jar>
 
 ## Compilation
 
-To compile jarbloat, run:
+To compile jarbloat, make sure you have
+[leiningen](https://leiningen.org/) installed and `make`. Run:
 
 ```
 make uberjar
