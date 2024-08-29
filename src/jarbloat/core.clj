@@ -10,30 +10,34 @@
   `~(System/getProperty "jarbloat.version"))
 
 ;; OptionParser can display help by calling (.printHelpOn op *out*) and will
-;; display descriptions from (.acceptsAll [..] "description"), but this doesn't work well
-;; with graalvm. joptsimple bundles help formatter locales in jar/resource and those
-;; are not accessible by graalvm compiler. Instead of that, just use simple hardcoded help.
+;; display descriptions from (.acceptsAll [..] "description"), and to compile it in
+;; graalvm image, it needs to be passed these options:
+;;
+;;   -H:IncludeResources=joptsimple/ExceptionMessages.properties
+;;   -H:IncludeResources=joptsimple/HelpFormatterMessages.properties
+;;
+;; However, I find manual formatting more flexible, so I'm keeping the things this way for now.
 (defn- help [^OptionParser _]
-  (println
-   (str
-    (if-graalvm
-      "Usage: jarbloat [options]"
-      "Usage: java -jar jarbloat.jar [options] jar1 jar2...")
-    "\n"
-    "Examine jar file(s) and determine to which dependencies contribute to the bloated size.\n\n"
-    "Usage:\n"
-    " -h, --help                                  Show this help\n"
-    " -v, --version                               Show version\n"
-    "     --demunge    [true|false]               Try to demunge/demangle clojure names (default true)\n"
-    "\n"
-    " -s, --sort       [uncompressed|compressed]  Sort type (default 'uncompressed')\n"
-    "     --group-ns                              Group by namespace\n"
-    "\n"
-    "     --pp-sizes                              Pretty-print size bytes to B/KB/MB\n"
-    "\n"
-    " -o, --output     [table|csv|json|image]     Output format (default is table)\n"
-    "     --image-dir  dir                        Location where to put images (default current dir)\n"
-    "Report bugs to: https://github.com/sanel/jarbloat/issues")))
+  (let [cmd (if-graalvm "jarbloat" "java -jar jarbloat.jar")]
+    (println
+     (str
+      "Usage: " cmd " [options] jar1 jar2..."
+      "\n"
+      "Examine jar file(s) and determine to which dependencies contribute to the bloated size.\n"
+      "\n"
+      "Usage:\n"
+      " -h, --help                                  Show this help\n"
+      " -v, --version                               Show version\n"
+      "     --demunge    [true|false]               Try to demunge/demangle clojure names (default true)\n"
+      "\n"
+      " -s, --sort       [uncompressed|compressed]  Sort type (default 'uncompressed')\n"
+      "     --group-ns                              Group by namespace\n"
+      "\n"
+      "     --pp-sizes                              Pretty-print size bytes to B/KB/MB\n"
+      "\n"
+      " -o, --output     [table|json|html]          Output format (default is table)\n"
+      "\n"
+      "Report bugs to: https://github.com/sanel/jarbloat/issues"))))
 
 (defn- handle-args [args]
   (let [op (doto (OptionParser.)
