@@ -78,10 +78,12 @@
         (let [entries (->> (map #(analyze-entry fd ^JarEntry % an opts)
                                 (-> fd .entries enumeration-seq))
                            (remove nil?))]
+          (if (:group-ns opts)
+            (pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))
+            (pp/print-table [:name :package :size :csize :type] (sort-by :name entries)))
+
           ;(pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))
           ;(pp/print-table [:name :package :size :csize :type] (sort-by :size #(compare %2 %1) entries))
-          (pp/print-table [:name :package :size :csize :type] (sort-by :name entries))
-
           ))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))

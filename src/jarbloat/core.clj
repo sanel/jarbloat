@@ -34,6 +34,7 @@
       " -s, --sort=[uncompressed|compressed]     Sort type (default 'uncompressed')\n"
       "     --sort-asc                           Sort in ascending order (default is descending)\n"
       "     --group-ns                           Group by namespace (default no, but always true when --output-type=html)\n"
+      "     --group-package                      Same as --group-ns\n"
       "     --demunge=[true|false]               Try to demunge/demangle clojure names (default true)\n"
       "     --pp-sizes=[true|false]              Pretty-print size bytes to B/KB/MB (default true)\n"
       "\n"
@@ -52,7 +53,7 @@
              #_(.recognizeAlternativeLongOptions true)
              (.acceptsAll ["h" "help"])
              (.acceptsAll ["v" "version"])
-             (.acceptsAll ["group-ns"])
+             (.acceptsAll ["group-ns" "group-package"])
              (.acceptsAll ["sort-asc"])
              (-> (.acceptsAll ["demunge" "demangle"]) .withRequiredArg)
              (-> (.acceptsAll ["a", "analyzer"]) .withRequiredArg)
