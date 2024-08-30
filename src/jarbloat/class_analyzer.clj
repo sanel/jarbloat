@@ -1,7 +1,7 @@
 (ns jarbloat.class-analyzer
   (:require [clojure.repl :refer [demunge]]
-            [clojure.string :as s]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [jarbloat.utils :refer [path-drop-last]])
   (:import [org.apache.bcel.classfile ClassParser JavaClass]
            java.io.InputStream))
 
@@ -20,7 +20,7 @@
 
   (get-package [_ cls]
     (let [^String name cls]
-      (->> (.split name "/") butlast (s/join "."))))
+      (path-drop-last name ".")))
 
   (get-classname [this cls {:keys [demunge?]}]
     (let [^String name cls

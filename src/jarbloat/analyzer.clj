@@ -1,6 +1,6 @@
 (ns jarbloat.analyzer
   (:require [clojure.pprint :as pp]
-            [clojure.string :as s]
+            [jarbloat.utils :refer [path-drop-last]]
             [jarbloat.class-analyzer :as c])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader]))
@@ -41,9 +41,10 @@
   (when (not (.isDirectory e))
     (let [path (.getName e)]
       (merge
+       ;; default values; will be overridden by matched cond blocks.
        {:name path
         :path path
-        :package (s/join "/" (-> path (.split "/") butlast))
+        :package (path-drop-last path)
         :size (.getSize e)
         :csize (.getCompressedSize e)
         :type :file}
