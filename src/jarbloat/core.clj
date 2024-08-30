@@ -100,4 +100,5 @@
     (when-not (bound? #'*1)
       (shutdown-agents))
     (catch Throwable e
-      (println "Got exception: " (.getMessage e)))))
+      (println "Got exception: " (.getMessage e))
+      (.printStackTrace e))))

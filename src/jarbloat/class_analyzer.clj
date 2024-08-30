@@ -24,7 +24,8 @@
 
   (get-classname [_ cls {:keys [demunge?]}]
     (let [^String name cls
-          name (-> name (.split "/") ^String last (.replaceAll "\\.class$" ""))]
+          ^String name (-> name (.split "/") last)
+          name (.replaceAll name "\\.class$" "")]
       (if demunge?
         (demunge name)
         name))))

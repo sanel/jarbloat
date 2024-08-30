@@ -36,7 +36,7 @@ binary: uberjar-graalvm
 	--report-unsupported-elements-at-runtime \
 	--initialize-at-run-time=com.sun.jna.platform.win32.User32 \
 	--initialize-at-run-time=com.sun.jna.platform.win32.Kernel32 \
-	--no-server \
+	--initialize-at-run-time=org.apache.bcel.util.ClassPath \
 	--no-fallback \
 	-H:+ReportExceptionStackTraces \
 	--initialize-at-build-time \

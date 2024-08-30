@@ -6,7 +6,7 @@
            [java.io PushbackReader InputStream InputStreamReader]))
 
 (defn- clojure-parse-ns
-  "Try to parse clojure namespace from an input stream."
+  "Try to parse clojure namespace from input stream."
   [^InputStream s]
   (with-open [rdr (-> s InputStreamReader. PushbackReader.)]
     (try
@@ -52,7 +52,6 @@
          (.endsWith path ".class")
          (let [stream (when (= "bcel" (c/analyzer-name class-analyzer))
                         (.getInputStream fd e))
-               path (.getName e)
                cls  (c/load-class class-analyzer (if stream
                                                    [stream path]
                                                    path))]
@@ -62,7 +61,7 @@
 
          ;; clojure source files
          (re-find #"\.clj[sxc]?$" path)
-         (when-let [ns (try-parse-ns (.getInputStream fd e))]
+         (when-let [ns (clojure-parse-ns (.getInputStream fd e))]
            {:package ns
             :type    :clojure})
 
@@ -71,32 +70,22 @@
 (defn analyze-jar
   "Run jar analysis with the given options."
   [^String path opts]
-  #_(println "---> " opts)
   (let [an (if (= "bcel" (:analyzer opts))
              (c/->BCELAnalyzer)
              (c/->FastAnalyzer))]
     (try
       (with-open [fd (JarFile. path)]
-        (let [entries (->> (map (fn [^JarEntry e]
-                                  (analyze-entry fd e an opts))
+        (let [entries (->> (map #(analyze-entry fd ^JarEntry % an opts)
                                 (-> fd .entries enumeration-seq))
                            (remove nil?))]
           ;(pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))
-          (pp/print-table [:name :package :size :csize :type] (sort-by :size #(compare %2 %1) entries))
+          ;(pp/print-table [:name :package :size :csize :type] (sort-by :size #(compare %2 %1) entries))
+          (pp/print-table [:name :package :size :csize :type] (sort-by :name entries))
 
           ))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
         (flush)))))
-
-  ;      (println path)
-  ;      (pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))))
-  ;      ;#_(pp/print-table [:name :ns :size :csize] entries)
-  ;      ;#_(doseq [x entries]
-  ;      ;    (println x))))
-  ;  (catch Exception e
-  ;    (printf "Error loading %s: %s\n" path (.getMessage e))
-  ;    (flush))))
 
 (defmacro analyze-jars
   "Analyze multiple jars with the given options."
