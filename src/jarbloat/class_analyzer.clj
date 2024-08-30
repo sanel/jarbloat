@@ -22,13 +22,15 @@
     (let [^String name cls]
       (->> (.split name "/") butlast (s/join "."))))
 
-  (get-classname [_ cls {:keys [demunge?]}]
+  (get-classname [this cls {:keys [demunge?]}]
     (let [^String name cls
           ^String name (-> name (.split "/") last)
           name (.replaceAll name "\\.class$" "")]
-      (if demunge?
-        (demunge name)
-        name))))
+      (str
+       ;; return package.name like BCELAnalyzer will do
+       (get-package this cls) "." (if demunge?
+                                    (demunge name)
+                                    name)))))
 
 ;; use Apache BCEL (https://commons.apache.org/proper/commons-bcel/) for analysis.
 ;; Slower, because it will load bytecode and parse it, but it's more accurate.
@@ -55,8 +57,6 @@
     (.getPackageName ^JavaClass cls))
 
   (get-classname [_ cls _]
-    ;; FIXME: this will return full package.classname but FastAnalyzer/get-classname
-    ;; will return classname only
     (.getClassName ^JavaClass cls)))
 
 (comment

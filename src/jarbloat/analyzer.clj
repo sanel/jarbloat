@@ -77,14 +77,27 @@
       (with-open [fd (JarFile. path)]
         (let [entries (->> (map #(analyze-entry fd ^JarEntry % an opts)
                                 (-> fd .entries enumeration-seq))
-                           (remove nil?))]
+                           (remove nil?))
+              comparator (if (:sort-asc opts)
+                           #(compare %1 %2)
+                           #(compare %2 %1))
+              sort-key (case (:sort opts)
+                         "name"    :name
+                         "package" :package
+                         "ns"      :package
+                         "csize"   :csize
+                         ;; default is sort by uncompressed size
+                         :size)]
           (if (:group-ns opts)
-            (pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))
-            (pp/print-table [:name :package :size :csize :type] (sort-by :name entries)))
-
-          ;(pp/print-table (sort-by :size #(compare %2 %1) (group-by-ns entries)))
-          ;(pp/print-table [:name :package :size :csize :type] (sort-by :size #(compare %2 %1) entries))
-          ))
+            (let [k (if (= sort-key :name)
+                      (do
+                        (println
+                         (str "*** I can't sort by 'name' because class names are not visible when"
+                              " grouped by package. I'm going to use '--sort=package' instead."))
+                        :package)
+                      sort-key)]
+              (pp/print-table (sort-by k comparator (group-by-ns entries))))
+            (pp/print-table [:name :package :size :csize :type] (sort-by sort-key comparator entries)))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
         (flush)))))

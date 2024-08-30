@@ -31,7 +31,7 @@
       "\n"
       " -a, --analyzer=[fast|bcel]               Analyzer used for class files (default fast)\n"
       "\n"
-      " -s, --sort=[uncompressed|compressed]     Sort type (default 'uncompressed')\n"
+      " -s, --sort=[name|package|size|csize]     Sort type (default 'size')\n"
       "     --sort-asc                           Sort in ascending order (default is descending)\n"
       "     --group-ns                           Group by namespace (default no, but always true when --output-type=html)\n"
       "     --group-package                      Same as --group-ns\n"
