@@ -15,6 +15,7 @@
 (defn path-drop-last
   "Drop last item in path and re-create path by using join-token."
   ([^String path join-token]
-   (assert (and path (.contains path "/")) "Invalid path string")
-   (->> (.split ^String path "/") butlast (s/join join-token)))
+   (if (and path (.contains path "/"))
+     (->> (.split ^String path "/") butlast (s/join join-token))
+     path))
   ([path] (path-drop-last path "/")))

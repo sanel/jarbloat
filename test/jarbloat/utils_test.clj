@@ -7,6 +7,6 @@
     (is (= (u/path-drop-last "foo/bar/baz") "foo/bar"))
     (is (= (u/path-drop-last "/") ""))
     (is (= (u/path-drop-last "foo/bar/baz" ".") "foo.bar"))
-    (is (thrown? AssertionError (u/path-drop-last "invalid-path")))
-    (is (thrown? AssertionError (u/path-drop-last nil)))
+    (is (= (u/path-drop-last "some-expr-that$will-not$be-chaged") "some-expr-that$will-not$be-chaged"))
+    (is (= (u/path-drop-last nil) nil))
     ))
