@@ -8,9 +8,9 @@
 (defn- percentage
   "Calculage percentage"
   [part total as-string?]
-  (let [n (long (* 100 (/ part total)))]
+  (let [n (float (* 100 (/ part total)))]
     (if as-string?
-      (str n "%")
+      (format "%.2f%%" n)
       n)))
 
 (defn- clojure-parse-ns
