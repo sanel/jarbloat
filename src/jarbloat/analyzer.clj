@@ -35,12 +35,14 @@
 
 (defn- group-by-ns
   "Emit entries grouped by namespace but also with size/csize summed for that namespace."
-  [entries]
+  [entries jarsz]
   (let [accum (fn [mps k] (reduce (fn [n e] (+ n (get e k))) 0 mps))]
     (map (fn [[k mps]]
-           {:package k
-            :size  (accum mps :size)
-            :csize (accum mps :csize)})
+           (let [total-size (accum mps :size)]
+             {:package k
+              :size    total-size
+              :csize   (accum mps :csize)
+              :percent (percentage total-size jarsz true)}))
          (group-by :package entries))))
 
 (defn- analyze-entry
@@ -108,7 +110,7 @@
                               " grouped by package. I'm going to use '--sort=package' instead."))
                         :package)
                       sort-key)]
-              (pp/print-table (sort-by k comparator (group-by-ns entries))))
+              (pp/print-table [:package :percent :size :csize] (sort-by k comparator (group-by-ns entries sz))))
             (pp/print-table [:name :package :percent :size :csize :type] (sort-by sort-key comparator entries)))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
