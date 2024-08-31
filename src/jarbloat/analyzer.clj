@@ -3,7 +3,15 @@
             [jarbloat.utils :refer [path-drop-last]]
             [jarbloat.class-analyzer :as c])
   (:import [java.util.jar JarFile JarEntry]
-           [java.io PushbackReader InputStream InputStreamReader]))
+           [java.io PushbackReader InputStream InputStreamReader File]))
+
+(defn- percentage
+  "Calculage percentage"
+  [part total as-string?]
+  (let [n (long (* 100 (/ part total)))]
+    (if as-string?
+      (str n "%")
+      n)))
 
 (defn- clojure-parse-ns
   "Try to parse clojure namespace from input stream."
@@ -37,16 +45,18 @@
 
 (defn- analyze-entry
   "Analyze single entry from JarFile. Returns nil if can't be analyzed."
-  [^JarFile fd ^JarEntry e class-analyzer opts]
+  [^JarFile fd ^JarEntry e class-analyzer jarsz opts]
   (when (not (.isDirectory e))
-    (let [path (.getName e)]
+    (let [path (.getName e)
+          sz   (.getSize e)]
       (merge
        ;; default values; will be overridden by matched cond blocks.
        {:name path
         :path path
         :package (path-drop-last path)
-        :size (.getSize e)
+        :size sz
         :csize (.getCompressedSize e)
+        :percent (percentage sz jarsz true)
         :type :file}
        (cond
          ;; java .class files
@@ -73,10 +83,11 @@
   [^String path opts]
   (let [an (if (= "bcel" (:analyzer opts))
              (c/->BCELAnalyzer)
-             (c/->FastAnalyzer))]
+             (c/->FastAnalyzer))
+        sz (-> path File. .length)]
     (try
       (with-open [fd (JarFile. path)]
-        (let [entries (->> (map #(analyze-entry fd ^JarEntry % an opts)
+        (let [entries (->> (map #(analyze-entry fd ^JarEntry % an sz opts)
                                 (-> fd .entries enumeration-seq))
                            (remove nil?))
               comparator (if (:sort-asc opts)
@@ -98,7 +109,7 @@
                         :package)
                       sort-key)]
               (pp/print-table (sort-by k comparator (group-by-ns entries))))
-            (pp/print-table [:name :package :size :csize :type] (sort-by sort-key comparator entries)))))
+            (pp/print-table [:name :package :percent :size :csize :type] (sort-by sort-key comparator entries)))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
         (flush)))))
