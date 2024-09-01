@@ -26,20 +26,21 @@
       "Examine jar file(s) and determine to which dependencies contribute to the bloated size.\n"
       "\n"
       "Usage:\n"
-      " -h, --help                               Show this help\n"
-      " -v, --version                            Show version\n"
+      "  -h, --help                               show this help\n"
+      "  -v, --version                            show version\n"
       "\n"
-      " -a, --analyzer=[fast|bcel]               Analyzer used for class files (default fast)\n"
+      "  -a, --analyzer=[fast|bcel]               analyzer used for class files (default 'fast')\n"
       "\n"
-      " -s, --sort=[name|package|size|csize]     Sort type (default 'size')\n"
-      "     --sort-asc                           Sort in ascending order (default is descending)\n"
-      "     --group-ns                           Group by namespace (default no, but always true when --output-type=html)\n"
-      "     --group-package                      Same as --group-ns\n"
-      "     --demunge=[true|false]               Try to demunge/demangle clojure names (default true)\n"
-      "     --pp-sizes=[true|false]              Pretty-print size bytes to B/KB/MB (default true)\n"
+      "  -s, --sort=[name|package|size|csize]     sort type (default 'size')\n"
+      "      --sort-asc                           sort in ascending order\n"
+      "      --group-ns                           group by namespace (default no, but always true when --output-type=html)\n"
+      "      --group-package                      equivalent to --group-ns\n"
+      "      --demunge                            try to demunge/demangle Clojure names\n"
+      "      --pp-sizes                           pretty-print size in B/KB/MB/GB\n"
       "\n"
-      " -t, --output-type=[table|json|html]      Report type (default is table)\n"
-      " -o, --output=file                        Where to write output. Default is stdout\n"
+      "  -t, --output-type=[table|csv|json|html]  report type (default is 'table')\n"
+      "  -o, --output=file                        where report to 'file' (make sense when only a single jar is analyzed)\n"
+      "  -d, --output-dir=dir                     write reports to 'dir' (useful if you analyze multiple jars)\n"
       "\n"
       "Report bugs to: https://github.com/sanel/jarbloat/issues"))))
 
@@ -55,11 +56,12 @@
              (.acceptsAll ["v" "version"])
              (.acceptsAll ["group-ns" "group-package"])
              (.acceptsAll ["sort-asc"])
-             (-> (.acceptsAll ["demunge" "demangle"]) .withRequiredArg)
+             (.acceptsAll ["demunge" "demangle"])
+             (.acceptsAll ["pp-sizes"])
              (-> (.acceptsAll ["a", "analyzer"]) .withRequiredArg)
              (-> (.acceptsAll ["o" "output"]) .withRequiredArg)
-             (-> (.acceptsAll ["t" "type"]) .withRequiredArg)
-             (-> (.acceptsAll ["pp-sizes"]) .withRequiredArg)
+             (-> (.acceptsAll ["t" "output-type"]) .withRequiredArg)
+             (-> (.acceptsAll ["d" "output-dir"]) .withRequiredArg)
              (-> (.acceptsAll ["s" "sort"]) .withRequiredArg))
         ;; these are non-arg options (those not starting with '-') and are
         ;; consider as jar files that are going to be read
@@ -79,13 +81,14 @@
         (if (seq files)
           (analyze-jars files
                         (-> {:group-ns (.has st "group-ns")
-                             :sort-asc (.has st "sort-asc")}
-                            (value-of st :demunge "demunge")
+                             :sort-asc (.has st "sort-asc")
+                             :demunge  (.has st "demunge")
+                             :pp-sizes (.has st "pp-sizes")}
                             (value-of st :analyzer "analyzer")
-                            (value-of st :output "output")
-                            (value-of st :type "type")
                             (value-of st :sort "sort")
-                            (value-of st :pp-sizes "pp-sizes")))
+                            (value-of st :output "output")
+                            (value-of st :output-type "output-type")
+                            (value-of st :output-dir "output-dir")))
           (println "No jar files specified in command line"))))))
 
 (defn -main [& args]
