@@ -1,7 +1,8 @@
 (ns jarbloat.analyzer
   (:require [clojure.pprint :as pp]
-            [jarbloat.utils :refer [path-drop-last]]
-            [jarbloat.class-analyzer :as c])
+            [jarbloat.utils :refer [path-drop-last pp-bytes]]
+            [jarbloat.class-analyzer :as c]
+            [cheshire.core :as json])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader File]))
 
@@ -110,7 +111,13 @@
                               " grouped by package. I'm going to use '--sort=package' instead."))
                         :package)
                       sort-key)]
-              (pp/print-table [:package :percent :size :csize] (sort-by k comparator (group-by-ns entries sz))))
+              ;(pp/print-table [:package :percent :size :csize] (sort-by k comparator (group-by-ns entries sz)))
+              (pp/print-table [:package :percent :size :csize]
+                              (map (fn [m]
+                                     (assoc m
+                                            :size (-> m :size pp-bytes)
+                                            :csize (-> m :csize pp-bytes)))
+                                   (sort-by k comparator (group-by-ns entries sz)))))
             (pp/print-table [:name :package :percent :size :csize :type] (sort-by sort-key comparator entries)))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))

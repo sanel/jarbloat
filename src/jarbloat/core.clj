@@ -21,8 +21,7 @@
   (let [cmd (if-graalvm "jarbloat" "java -jar jarbloat.jar")]
     (println
      (str
-      "Usage: " cmd " [options] jar1 jar2..."
-      "\n"
+      "Usage: " cmd " [options] jar1 jar2...\n"
       "Examine jar file(s) and determine to which dependencies contribute to the bloated size.\n"
       "\n"
       "Usage:\n"

@@ -5,6 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.apache.bcel/bcel "6.10.0"]
+                 [cheshire "5.13.0"]
                  [net.sf.jopt-simple/jopt-simple "6.0-alpha-3"]]
   :global-vars {*warn-on-reflection* true}
   :repl-options {:init-ns jarbloat.core, :port 7888}
