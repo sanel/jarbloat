@@ -1,6 +1,6 @@
 (ns jarbloat.analyzer
-  (:require [clojure.pprint :as pp]
-            [jarbloat.utils :refer [path-drop-last pp-bytes]]
+  (:require [jarbloat.utils :refer [path-drop-last pp-bytes update-keys]]
+            [jarbloat.printer :as p]
             [jarbloat.class-analyzer :as c]
             [cheshire.core :as json])
   (:import [java.util.jar JarFile JarEntry]
@@ -102,23 +102,34 @@
                          "ns"      :package
                          "csize"   :csize
                          ;; default is sort by uncompressed size
-                         :size)]
+                         :size)
+              sort-key (if (and (:group-ns opts) (= sort-key :name))
+                         (do
+                           (println
+                            (str "*** I can't sort by 'name' because class names are not visible when"
+                                 " grouped by package. I'm going to use '--sort=package' instead."))
+                           :package)
+                         sort-key)
+              ;; When we want to pretty-print sizes, first make sure to sort the content
+              ;; by size key (:size or :csize), then replace entries with updated sizes.
+              ;; This way we don't have to hold in every map additional pretty-print valies.
+              sort-entries (if (:pp-sizes opts)
+                             (fn [k c e]
+                               (map #(update-keys % [:size :csize] pp-bytes)
+                                    (sort-by k c e)))
+                             sort-by)
+              output-type (case (:output-type opts)
+                            "csv"  :csv
+                            "json" :json
+                            "html" :html
+                            :table)]
           (if (:group-ns opts)
-            (let [k (if (= sort-key :name)
-                      (do
-                        (println
-                         (str "*** I can't sort by 'name' because class names are not visible when"
-                              " grouped by package. I'm going to use '--sort=package' instead."))
-                        :package)
-                      sort-key)]
-              ;(pp/print-table [:package :percent :size :csize] (sort-by k comparator (group-by-ns entries sz)))
-              (pp/print-table [:package :percent :size :csize]
-                              (map (fn [m]
-                                     (assoc m
-                                            :size (-> m :size pp-bytes)
-                                            :csize (-> m :csize pp-bytes)))
-                                   (sort-by k comparator (group-by-ns entries sz)))))
-            (pp/print-table [:name :package :percent :size :csize :type] (sort-by sort-key comparator entries)))))
+            (p/do-print output-type
+                        [:package :percent :size :csize]
+                        (sort-entries sort-key comparator (group-by-ns entries sz)))
+            (p/do-print output-type
+                        [:name :package :percent :size :csize :type]
+                        (sort-entries sort-key comparator entries)))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
         (flush)))))

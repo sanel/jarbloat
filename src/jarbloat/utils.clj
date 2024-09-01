@@ -33,3 +33,10 @@
       (format "%.2f%s" (/ n (Math/pow k i)) (nth sizes i))
       (catch IndexOutOfBoundsException _
         (str n "B")))))
+
+(defn update-keys
+  "Similar to clojure.core/update, but apply f to multiple keys.
+Just like clojure.core/update, it will throw NullPointerException if one of key from ks
+is not present in a map."
+  [m ks f]
+  (reduce #(update %1 %2 f) m ks))
