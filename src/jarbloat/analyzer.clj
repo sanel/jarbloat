@@ -1,8 +1,7 @@
 (ns jarbloat.analyzer
-  (:require [jarbloat.utils :refer [path-drop-last pp-bytes update-keys]]
+  (:require [jarbloat.utils :refer [path-drop-last pp-bytes update-with-keys]]
             [jarbloat.printer :as p]
-            [jarbloat.class-analyzer :as c]
-            [cheshire.core :as json])
+            [jarbloat.class-analyzer :as c])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader File]))
 
@@ -115,7 +114,7 @@
               ;; This way we don't have to hold in every map additional pretty-print valies.
               sort-entries (if (:pp-sizes opts)
                              (fn [k c e]
-                               (map #(update-keys % [:size :csize] pp-bytes)
+                               (map #(update-with-keys % [:size :csize] pp-bytes)
                                     (sort-by k c e)))
                              sort-by)
               output-type (case (:output-type opts)

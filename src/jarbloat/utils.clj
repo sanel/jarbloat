@@ -34,7 +34,7 @@
       (catch IndexOutOfBoundsException _
         (str n "B")))))
 
-(defn update-keys
+(defn update-with-keys
   "Similar to clojure.core/update, but apply f to multiple keys.
 Just like clojure.core/update, it will throw NullPointerException if one of key from ks
 is not present in a map."
