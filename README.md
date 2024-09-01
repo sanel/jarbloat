@@ -1,5 +1,5 @@
 # jarbloat
-![jarbloat tests](https://github.com/sanel/jarbloat/actions/workflows/clojure.yml/badge.svg)
+[![jarbloat tests](https://github.com/sanel/jarbloat/actions/workflows/clojure.yml/badge.svg)](https://github.com/sanel/jarbloat/actions)]
 
 A simple tool to analyze the size of a Java JAR file. Inspired with [go-size-analyzer](https://github.com/Zxilly/go-size-analyzer).
 
