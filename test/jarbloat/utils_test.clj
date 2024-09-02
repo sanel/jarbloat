@@ -3,12 +3,13 @@
             [jarbloat.utils :as u]))
 
 (deftest utils-test
-  (testing "path-drop-last"
-    (is (= (u/path-drop-last "foo/bar/baz") "foo/bar"))
-    (is (= (u/path-drop-last "/") ""))
-    (is (= (u/path-drop-last "foo/bar/baz" ".") "foo.bar"))
-    (is (= (u/path-drop-last "some-expr-that$will-not$be-chaged") "some-expr-that$will-not$be-chaged"))
-    (is (= (u/path-drop-last nil) nil))
+  (testing "path-cut"
+    (is (= (u/path-cut "foo/bar/baz") "foo/bar"))
+    (is (= (u/path-cut "") ""))
+    (is (= (u/path-cut "foo/bar/baz" ".") "foo.bar"))
+    (is (= (u/path-cut "foo.bar.baz$some_other" #"\." ".") "foo.bar"))
+    (is (= (u/path-cut "some-expr-that$will-not$be-chaged") "some-expr-that$will-not$be-chaged"))
+    (is (= (u/path-cut nil) nil))
     )
 
   (testing "pp-bytes"

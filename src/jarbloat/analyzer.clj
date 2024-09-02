@@ -1,5 +1,5 @@
 (ns jarbloat.analyzer
-  (:require [jarbloat.utils :refer [path-drop-last pp-bytes update-with-keys]]
+  (:require [jarbloat.utils :refer [path-cut pp-bytes update-with-keys]]
             [jarbloat.printer :as p]
             [jarbloat.class-analyzer :as c]
             [clojure.string :as s])
@@ -55,6 +55,7 @@
   (let [accum (fn [mps k] (map #(get % k) mps))]
     (map (fn [[k mps]]
            {:name k
+            ;; FIXME: why use flatten and why it can yield empty set
             :deps (set (flatten (accum mps :deps)))})
          (group-by :name entries))))
 
@@ -90,7 +91,7 @@ size of children packages and each child node will contain child classes and the
        ;; default values; will be overridden by matched cond blocks.
        {:name path
         :path path
-        :package (path-drop-last path)
+        :package (path-cut path)
         :size sz
         :csize (.getCompressedSize e)
         :percent (percentage sz jarsz true)
@@ -130,8 +131,7 @@ Returns nil on skipped entries or a map with class name and dependencies."
                                                     path))]
           (if (:group-ns opts)
             {:name    (c/get-package class-analyzer cls)
-             :deps    (map (fn [^String s]
-                             (->> (.split s "\\.") butlast (s/join ".")))
+             :deps    (map #(path-cut % #"\." ".")
                            (c/get-deps class-analyzer cls))}
             {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
              :package (c/get-package class-analyzer cls)

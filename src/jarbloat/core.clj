@@ -42,6 +42,7 @@
       "  -d, --output-dir=dir                     write reports to 'dir' (useful if you analyze multiple jars)\n"
       "\n"
       "  -e, --deps                               calculate jar dependencies for every class and output it in graphviz dot format\n"
+      "                                           (use with --group-ns/--group-package option to show only package dependencies)\n"
       "      --dependencies                       equivalent to --deps\n"
       "\n"
       "Report bugs to: https://github.com/sanel/jarbloat/issues"))))

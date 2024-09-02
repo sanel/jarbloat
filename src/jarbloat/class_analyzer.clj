@@ -1,7 +1,7 @@
 (ns jarbloat.class-analyzer
   (:require [clojure.repl :refer [demunge]]
             [clojure.java.io :as io]
-            [jarbloat.utils :refer [path-drop-last]])
+            [jarbloat.utils :refer [path-cut]])
   (:import [org.apache.bcel.classfile ClassParser JavaClass EmptyVisitor DescendingVisitor
             ConstantClass]
            java.util.ArrayList
@@ -23,7 +23,7 @@
 
   (get-package [_ cls]
     (let [^String name cls]
-      (path-drop-last name ".")))
+      (path-cut name ".")))
 
   (get-classname [this cls {:keys [demunge?]}]
     (let [^String name cls
@@ -74,9 +74,15 @@
                         (.add lst (.getBytes obj cp)))))]
       (doto (DescendingVisitor. cls visitor)
         (.visit))
-      ;; Visitor will store classes with '/' delimiter. Also, convert lst
-      ;; to set to prevent any duplicate elements.
-      (map #(.replaceAll ^String % "/" ".") (set lst)))))
+      (map (fn [^String s]
+             (-> s
+                 ;; skip array of (some class type) as they will can be
+                 ;; returned as a type
+                 (.replaceAll "^\\[L" "")
+                 ;; visitor will store classes with '/' delimiter
+                 (.replaceAll "/" ".")))
+           ;; convert it to set to prevent any duplicate elements
+           (set lst)))))
 
 (comment
 

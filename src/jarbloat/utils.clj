@@ -1,5 +1,6 @@
 (ns jarbloat.utils
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as s])
+  (:import java.util.regex.Pattern))
 
 (defmacro if-graalvm
   "Execute blocks if graalvm is detected."
@@ -12,13 +13,20 @@
      `(do ~else)))
   ([then] `(if-graalvm ~then nil)))
 
-(defn path-drop-last
-  "Drop last item in path and re-create path by using join-token."
-  ([^String path join-token]
-   (if (and path (.contains path "/"))
-     (->> (.split ^String path "/") butlast (s/join join-token))
-     path))
-  ([path] (path-drop-last path "/")))
+(defn path-cut
+  "Take input a string with delimiter (in clojure regex form), split it
+and drop last item. Later, join elements with join-delim. Useful for cutting
+last elements of path or package name."
+  ([^String s re join-token]
+   (assert (instance? Pattern re) "re is expected to be a regex pattern")
+   (assert (instance? String join-token) "join-token is expected to be a string")
+   (let [t (and s (s/split s re))]
+     ;; (count nil) -> 0
+     (if (> (count t) 1)
+       (s/join join-token (subvec t 0 (- (count t) 1)))
+       s)))
+  ([s join-token] (path-cut s #"/" join-token))
+  ([s] (path-cut s "/")))
 
 (defn pp-bytes
   "Pretty print byte value."
