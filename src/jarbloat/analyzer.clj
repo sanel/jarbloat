@@ -129,9 +129,12 @@ Returns nil on skipped entries or a map with class name and dependencies."
                                                     [stream path]
                                                     path))]
           (if (:group-ns opts)
-            {:name    (c/get-package class-analyzer cls)
-             :deps    (map #(path-cut % #"\." ".")
-                           (c/get-deps class-analyzer cls))}
+            (when-let [;; package can be nil if .class does not have any. For example
+                       ;; module-info.class can be without packages
+                       package (->> cls (c/get-package class-analyzer) not-empty)]
+              {:name    (c/get-package class-analyzer cls)
+               :deps    (map #(path-cut % #"\." ".")
+                             (c/get-deps class-analyzer cls))})
             {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
              :package (c/get-package class-analyzer cls)
              :deps    (c/get-deps class-analyzer cls)}))))))
@@ -139,7 +142,9 @@ Returns nil on skipped entries or a map with class name and dependencies."
 (defn analyze-jar
   "Run jar analysis with the given options."
   [^String path opts]
-  (let [an (if (= "bcel" (:analyzer opts))
+  (let [an (if (or (= "bcel" (:analyzer opts))
+                   ;; calculating class dependencies works only with BCEL backend
+                   (:deps opts))
              (c/->BCELAnalyzer)
              (c/->FastAnalyzer))
         sz (-> path File. .length)]

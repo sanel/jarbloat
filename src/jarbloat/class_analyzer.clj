@@ -74,15 +74,21 @@
                         (.add lst (.getBytes obj cp)))))]
       (doto (DescendingVisitor. cls visitor)
         (.visit))
-      (map (fn [^String s]
-             (-> s
-                 ;; skip array of (some class type) as they will can be
-                 ;; returned as a type
-                 (.replaceAll "^\\[L" "")
-                 ;; visitor will store classes with '/' delimiter
-                 (.replaceAll "/" ".")))
-           ;; convert it to set to prevent any duplicate elements
-           (set lst)))))
+      ;; convert it to set to prevent any duplicate elements
+      (->> (set lst)
+           (map (fn [^String s]
+                  (let [s (if (and s (.startsWith s "["))
+                            ;; Drop elements that are arrays of primitive types. Eg.
+                            ;; byte array will be '[B', boolean array '[Z' and etc. However
+                            ;; the exception is array of non-primitive classes (e.g. [L<classname>)
+                            ;; in which case we are going to keep <classname>.
+                            (let [r (.replaceAll s "^\\[+[BSIJFDCZL]" "")]
+                              (when (> (count r) 1)
+                                r))
+                            s)]
+                    ;; visitor will store classes with '/' delimiter
+                    (some-> s (.replaceAll "/" ".")))))
+           (remove nil?)))))
 
 (comment
 
