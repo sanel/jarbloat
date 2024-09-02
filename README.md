@@ -1,7 +1,17 @@
 # jarbloat
 [![jarbloat tests](https://github.com/sanel/jarbloat/actions/workflows/clojure.yml/badge.svg)](https://github.com/sanel/jarbloat/actions)
 
-A simple tool to analyze the size of a Java JAR file. Inspired with [go-size-analyzer](https://github.com/Zxilly/go-size-analyzer).
+A simple tool to analyze the content and size of a Java JAR file. Inspired with [go-size-analyzer](https://github.com/Zxilly/go-size-analyzer).
+
+Features:
+ * Works on Java >= 8
+ * Detail size breakdown by files and packages
+ * Support multiple output formats: table (can be used in markdown or
+   [org-mode](https://orgmode.org/) files), json, csv and interactive html
+ * Support for analyzing the dependency of each class file (within a jar) and
+   displaying dependency graph in [Graphviz dot](https://graphviz.org/) format
+ * It can be compiled with [GraalVM](https://www.graalvm.org/) for
+   fast startup (for now tested only on Linux)
 
 ## Usage
 
@@ -18,8 +28,8 @@ To compile jarbloat, make sure you have
 make uberjar
 ```
 
-and you will get standalone uberjar in `target/jarbloat.jar`. To
-compile it to standalone binary, install
+and you will get a standalone uberjar in `target/jarbloat.jar.` To
+compile it to a standalone binary, install
 [GraalVM](https://www.graalvm.org/) and run:
 
 ```
