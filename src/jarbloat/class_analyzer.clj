@@ -2,14 +2,17 @@
   (:require [clojure.repl :refer [demunge]]
             [clojure.java.io :as io]
             [jarbloat.utils :refer [path-drop-last]])
-  (:import [org.apache.bcel.classfile ClassParser JavaClass]
+  (:import [org.apache.bcel.classfile ClassParser JavaClass EmptyVisitor DescendingVisitor
+            ConstantClass]
+           java.util.ArrayList
            java.io.InputStream))
 
 (defprotocol ClassAnalyzer
   (analyzer-name [_] "Get analyzer name")
   (load-class    [_ path] "Create a class object for this analyzer")
   (get-package   [_ cls] "Get package name from the given .class path")
-  (get-classname [_ cls opts] "Get readable class name from the given .class path"))
+  (get-classname [_ cls opts] "Get readable class name from the given .class path")
+  (get-deps      [_ cls] "Get class dependencies or packages it depends on"))
 
 ;; try to determine metadata based solely on class path
 (deftype FastAnalyzer []
@@ -30,7 +33,9 @@
        ;; return package.name like BCELAnalyzer will do
        (get-package this cls) "." (if demunge?
                                     (demunge name)
-                                    name)))))
+                                    name))))
+  (get-deps [_ _cls]
+    (throw (Exception. "Getting dependencies using FastAnalyzer is not supported"))))
 
 ;; use Apache BCEL (https://commons.apache.org/proper/commons-bcel/) for analysis.
 ;; Slower, because it will load bytecode and parse it, but it's more accurate.
@@ -57,19 +62,35 @@
     (.getPackageName ^JavaClass cls))
 
   (get-classname [_ cls _]
-    (.getClassName ^JavaClass cls)))
+    (.getClassName ^JavaClass cls))
+
+  (get-deps [_ cls]
+    (let [cls ^JavaClass cls
+          ;; mutable container because EmptyVisitor will just iterate
+          lst (ArrayList.)
+          visitor (proxy [EmptyVisitor] []
+                    (visitConstantClass [^ConstantClass obj]
+                      (let [cp (.getConstantPool cls)]
+                        (.add lst (.getBytes obj cp)))))]
+      (doto (DescendingVisitor. cls visitor)
+        (.visit))
+      ;; visitor will store classes with '/' delimiter
+      (map #(.replaceAll ^String % "/" ".") lst))))
 
 (comment
 
-(let [o (->FastAnalyzer)
-      ;o (->BCELAnalyzer)
+(let [;o (->FastAnalyzer)
+      o (->BCELAnalyzer)
       ;path "target/classes/jarbloat/analyzer$group_by_ns$fn__46$fn__50.class"
-      path "target/classes/jarbloat/ca/FastAnalyzer.class"
+      ;path "target/classes/jarbloat/class_analyzer/BCELAnalyzer.class"
+      ;path "target/classes/jarbloat/class_analyzer/ClassAnalyzer.class"
+      path "target/classes/jarbloat/utils$if_graalvm.class"
       c (load-class o path)
       ;c (load-class o [(io/input-stream path) path])
       ]
   (println "anal   : " (analyzer-name o))
   (println "package: " (get-package o c))
-  (println "name   : " (get-classname o c {:demunge true})))
+  (println "name   : " (get-classname o c {:demunge true}))
+  (println "deps   : " (get-deps o c)))
 
 )
