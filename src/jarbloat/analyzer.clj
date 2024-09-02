@@ -132,9 +132,9 @@ Returns nil on skipped entries or a map with class name and dependencies."
             (when-let [;; package can be nil if .class does not have any. For example
                        ;; module-info.class can be without packages
                        package (->> cls (c/get-package class-analyzer) not-empty)]
-              {:name    (c/get-package class-analyzer cls)
-               :deps    (map #(path-cut % #"\." ".")
-                             (c/get-deps class-analyzer cls))})
+              {:name package
+               :deps (map #(path-cut % #"\." ".")
+                          (c/get-deps class-analyzer cls))})
             {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
              :package (c/get-package class-analyzer cls)
              :deps    (c/get-deps class-analyzer cls)}))))))
