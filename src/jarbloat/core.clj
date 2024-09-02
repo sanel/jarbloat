@@ -41,6 +41,9 @@
       "  -o, --output=file                        where report to 'file' (make sense when only a single jar is analyzed)\n"
       "  -d, --output-dir=dir                     write reports to 'dir' (useful if you analyze multiple jars)\n"
       "\n"
+      "  -e, --deps                               calculate jar dependencies for every clas and output it in GraphViz dot format\n"
+      "      --dependencies                       equivalent to --deps\n"
+      "\n"
       "Report bugs to: https://github.com/sanel/jarbloat/issues"))))
 
 (defn- value-of [mp ^OptionSet parser key ^String name]
@@ -57,6 +60,7 @@
              (.acceptsAll ["sort-asc"])
              (.acceptsAll ["demunge" "demangle"])
              (.acceptsAll ["pp-sizes"])
+             (.acceptsAll ["e" "deps" "dependencies"])
              (-> (.acceptsAll ["a", "analyzer"]) .withRequiredArg)
              (-> (.acceptsAll ["o" "output"]) .withRequiredArg)
              (-> (.acceptsAll ["t" "output-type"]) .withRequiredArg)
@@ -79,10 +83,11 @@
             files   (into [] (.values nonopts st))]
         (if (seq files)
           (analyze-jars files
-                        (-> {:group-ns (.has st "group-ns")
-                             :sort-asc (.has st "sort-asc")
-                             :demunge  (.has st "demunge")
-                             :pp-sizes (.has st "pp-sizes")}
+                        (-> {:group-ns  (.has st "group-ns")
+                             :sort-asc  (.has st "sort-asc")
+                             :demunge   (.has st "demunge")
+                             :pp-sizes  (.has st "pp-sizes")
+                             :deps      (.has st "deps")}
                             (value-of st :analyzer "analyzer")
                             (value-of st :sort "sort")
                             (value-of st :output "output")
