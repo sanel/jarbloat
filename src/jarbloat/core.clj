@@ -41,7 +41,7 @@
       "  -o, --output=file                        where report to 'file' (make sense when only a single jar is analyzed)\n"
       "  -d, --output-dir=dir                     write reports to 'dir' (useful if you analyze multiple jars)\n"
       "\n"
-      "  -e, --deps                               calculate jar dependencies for every clas and output it in GraphViz dot format\n"
+      "  -e, --deps                               calculate jar dependencies for every class and output it in graphviz dot format\n"
       "      --dependencies                       equivalent to --deps\n"
       "\n"
       "Report bugs to: https://github.com/sanel/jarbloat/issues"))))

@@ -7,6 +7,9 @@
   (doseq [r rows]
     (println (->> (select-keys r ks) vals (join ",")))))
 
+;; huge graphviz images
+;; https://stackoverflow.com/questions/13417411/laying-out-a-large-graph-with-graphviz
+
 (defn do-print-dot
   "Print GraphViz dot format to stdout, assuming rows are
 obtained through (analyze-entry-deps)."

@@ -74,8 +74,9 @@
                         (.add lst (.getBytes obj cp)))))]
       (doto (DescendingVisitor. cls visitor)
         (.visit))
-      ;; visitor will store classes with '/' delimiter
-      (map #(.replaceAll ^String % "/" ".") lst))))
+      ;; Visitor will store classes with '/' delimiter. Also, convert lst
+      ;; to set to prevent any duplicate elements.
+      (map #(.replaceAll ^String % "/" ".") (set lst)))))
 
 (comment
 

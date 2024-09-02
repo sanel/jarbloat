@@ -1,7 +1,8 @@
 (ns jarbloat.analyzer
   (:require [jarbloat.utils :refer [path-drop-last pp-bytes update-with-keys]]
             [jarbloat.printer :as p]
-            [jarbloat.class-analyzer :as c])
+            [jarbloat.class-analyzer :as c]
+            [clojure.string :as s])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader File]))
 
@@ -47,6 +48,15 @@
               ;; because it doesn't tell actuall jar size.
               :percent (percentage total-csize jarsz true)}))
          (group-by :package entries))))
+
+(defn- group-by-ns-for-deps
+  "Similar to group-by-ns, but only for dot/deps output."
+  [entries]
+  (let [accum (fn [mps k] (map #(get % k) mps))]
+    (map (fn [[k mps]]
+           {:name k
+            :deps (set (flatten (accum mps :deps)))})
+         (group-by :name entries))))
 
 #_(defn- tree-by-ns
   "Similar to (group-by-ns), but emit a tree where parent node contains metadata like total
@@ -118,9 +128,14 @@ Returns nil on skipped entries or a map with class name and dependencies."
               cls    (c/load-class class-analyzer (if stream
                                                     [stream path]
                                                     path))]
-           {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
-            :package (c/get-package class-analyzer cls)
-            :deps    (c/get-deps class-analyzer cls)})))))
+          (if (:group-ns opts)
+            {:name    (c/get-package class-analyzer cls)
+             :deps    (map (fn [^String s]
+                             (->> (.split s "\\.") butlast (s/join ".")))
+                           (c/get-deps class-analyzer cls))}
+            {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
+             :package (c/get-package class-analyzer cls)
+             :deps    (c/get-deps class-analyzer cls)}))))))
 
 (defn analyze-jar
   "Run jar analysis with the given options."
@@ -138,7 +153,10 @@ Returns nil on skipped entries or a map with class name and dependencies."
                                 (-> fd .entries enumeration-seq))
                            (remove nil?))]
           (if (:deps opts)
-            (p/do-print-dot entries)
+            (let [entries (if (:group-ns opts)
+                            (group-by-ns-for-deps entries)
+                            entries)]
+              (p/do-print-dot entries))
             (let [comparator (if (:sort-asc opts)
                                #(compare %1 %2)
                                #(compare %2 %1))
