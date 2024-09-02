@@ -51,11 +51,10 @@
 (defn- group-by-ns-for-deps
   "Similar to group-by-ns, but only for dot/deps output."
   [entries]
-  (let [accum (fn [mps k] (map #(get % k) mps))]
+  (let [accum (fn [mps k] (reduce #(apply conj %1 (get %2 k)) #{} mps))]
     (map (fn [[k mps]]
            {:name k
-            ;; FIXME: why use flatten and why it can yield empty set
-            :deps (set (flatten (accum mps :deps)))})
+            :deps (accum mps :deps)})
          (group-by :name entries))))
 
 #_(defn- tree-by-ns
