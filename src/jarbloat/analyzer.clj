@@ -1,8 +1,7 @@
 (ns jarbloat.analyzer
   (:require [jarbloat.utils :refer [path-cut pp-bytes update-with-keys]]
             [jarbloat.printer :as p]
-            [jarbloat.class-analyzer :as c]
-            [clojure.string :as s])
+            [jarbloat.class-analyzer :as c])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader File]))
 
