@@ -37,6 +37,9 @@
       "      --demunge                            try to demunge/demangle Clojure names\n"
       "      --pp-sizes                           pretty-print size in B/KB/MB/GB\n"
       "\n"
+      "      --include=pattern                    show only package and classes matching the pattern\n"
+      "      --exclude=pattern                    exclude packages and classes matching the pattern\n"
+      "\n"
       "  -t, --output-type=[table|csv|json|html]  report type (default is 'table')\n"
       "  -o, --output=file                        where report to 'file' (make sense when only a single jar is analyzed)\n"
       "  -d, --output-dir=dir                     write reports to 'dir' (useful if you analyze multiple jars)\n"
@@ -47,9 +50,15 @@
       "\n"
       "Report bugs to: https://github.com/sanel/jarbloat/issues"))))
 
-(defn- value-of [mp ^OptionSet parser key ^String name]
+(defn- value-of
+  "Get a value from OptionSet by name. If multi? is true, get multiple
+values, expecting argument to be used multiple times."
+  [mp ^OptionSet parser key ^String name multi?]
   (if (.has parser name)
-    (assoc mp key (.valueOf parser name))
+    (let [v (if multi?
+              (into [] (.valuesOf parser name))
+              (.valueOf parser name))]
+      (assoc mp key v))
     mp))
 
 (defn- handle-args [args]
@@ -66,7 +75,9 @@
              (-> (.acceptsAll ["o" "output"]) .withRequiredArg)
              (-> (.acceptsAll ["t" "output-type"]) .withRequiredArg)
              (-> (.acceptsAll ["d" "output-dir"]) .withRequiredArg)
-             (-> (.acceptsAll ["s" "sort"]) .withRequiredArg))
+             (-> (.acceptsAll ["s" "sort"]) .withRequiredArg)
+             (-> (.acceptsAll ["include"]) .withRequiredArg)
+             (-> (.acceptsAll ["exxclude"]) .withRequiredArg))
         ;; these are non-arg options (those not starting with '-') and are
         ;; consider as jar files that are going to be read
         nonopts (.nonOptions op)
@@ -89,11 +100,13 @@
                              :demunge   (.has st "demunge")
                              :pp-sizes  (.has st "pp-sizes")
                              :deps      (.has st "deps")}
-                            (value-of st :analyzer "analyzer")
-                            (value-of st :sort "sort")
-                            (value-of st :output "output")
-                            (value-of st :output-type "output-type")
-                            (value-of st :output-dir "output-dir")))
+                            (value-of st :analyzer "analyzer" false)
+                            (value-of st :sort "sort" false)
+                            (value-of st :include "include" true)
+                            (value-of st :exclude "exclude" true)
+                            (value-of st :output "output" false)
+                            (value-of st :output-type "output-type" false)
+                            (value-of st :output-dir "output-dir" false)))
           (println "No jar files specified in command line"))))))
 
 (defn -main [& args]
