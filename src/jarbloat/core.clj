@@ -106,8 +106,14 @@ values, expecting argument to be used multiple times."
         ;; these are non-arg options (those not starting with '-') and are
         ;; consider as jar files that are going to be read
         nonopts (.nonOptions op)
-        st (.parse op (into-array String args))]
+        ^OptionSet st (try
+                        (.parse op (into-array String args))
+                        ;; Unrecognized option will throw exception. With GraalVM, it will
+                        ;; try to load translation bundle. Instead, print a custom error down below.
+                        (catch Exception _))]
     (cond
+      (nil? st) (println "Unrecognized option. Use '--help' option to see available options")
+
       (or (empty? args) (.has st "help"))
       (help op)
 
