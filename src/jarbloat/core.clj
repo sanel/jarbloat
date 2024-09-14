@@ -53,13 +53,32 @@
 (defn- value-of
   "Get a value from OptionSet by name. If multi? is true, get multiple
 values, expecting argument to be used multiple times."
-  [mp ^OptionSet parser key ^String name multi?]
-  (if (.has parser name)
-    (let [v (if multi?
-              (into [] (.valuesOf parser name))
-              (.valueOf parser name))]
-      (assoc mp key v))
-    mp))
+  ([mp ^OptionSet parser key ^String name multi? validator-fn]
+   (if (.has parser name)
+     (let [v (if multi?
+               (into [] (.valuesOf parser name))
+               (.valueOf parser name))]
+       ;; allow validator-fn to accept sequence as argument for checking
+       ;; so it can see if there are duplicate entries, e.g. --include=foo --include=foo
+       ;; it will receive (validator-fn [foo foo])
+       ;;
+       ;; also, if (validator-fn) returns false/nil, consider that as a failure too
+       (if (fn? validator-fn)
+         (when (validator-fn v)
+           (assoc mp key v))
+         (assoc mp key v)))
+     mp))
+  ([mp parser key name multi?]
+   (value-of mp parser key name multi? nil)))
+
+(defn- valid-pattern? [p]
+  (if (sequential? p)
+    ;; if any of elements is nil (failed pattern), mark everything as false
+    (not (some nil? (map valid-pattern? p)))
+    (try
+      (re-pattern p)
+      (catch Exception e
+        (printf "Bad regex pattern: %s\n%s\n" p (.getMessage e))))))
 
 (defn- handle-args [args]
   (let [op (doto (OptionParser.)
@@ -77,7 +96,7 @@ values, expecting argument to be used multiple times."
              (-> (.acceptsAll ["d" "output-dir"]) .withRequiredArg)
              (-> (.acceptsAll ["s" "sort"]) .withRequiredArg)
              (-> (.acceptsAll ["include"]) .withRequiredArg)
-             (-> (.acceptsAll ["exxclude"]) .withRequiredArg))
+             (-> (.acceptsAll ["exclude"]) .withRequiredArg))
         ;; these are non-arg options (those not starting with '-') and are
         ;; consider as jar files that are going to be read
         nonopts (.nonOptions op)
@@ -102,8 +121,8 @@ values, expecting argument to be used multiple times."
                              :deps      (.has st "deps")}
                             (value-of st :analyzer "analyzer" false)
                             (value-of st :sort "sort" false)
-                            (value-of st :include "include" true)
-                            (value-of st :exclude "exclude" true)
+                            (value-of st :include "include" true valid-pattern?)
+                            (value-of st :exclude "exclude" true valid-pattern?)
                             (value-of st :output "output" false)
                             (value-of st :output-type "output-type" false)
                             (value-of st :output-dir "output-dir" false)))
@@ -122,5 +141,5 @@ values, expecting argument to be used multiple times."
     (when-not (bound? #'*1)
       (shutdown-agents))
     (catch Throwable e
-      (println "Got exception: " (.getMessage e))
+      (println "Got exception")
       (.printStackTrace e))))
