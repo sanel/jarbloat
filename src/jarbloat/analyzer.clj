@@ -155,7 +155,9 @@ which means it should be shown."
                (or (nil? exclude-re) (sequential? exclude-re)))
           "include-re and exclude-re must be either a list of regexes or nil")
 
-  (if-let [package (:package mp)]
+  (if-let [package (or (:package mp)
+                       ;; group-ns will not set :package but :name
+                       (:name mp))]
     (cond
       (seq (not-empty include-re))
       (when (some #(re-find % package) include-re)
