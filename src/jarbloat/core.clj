@@ -37,8 +37,10 @@
       "      --demunge                            try to demunge/demangle Clojure names\n"
       "      --pp-sizes                           pretty-print size in B/KB/MB/GB\n"
       "\n"
-      "      --include=pattern                    show only package and classes matching the pattern\n"
-      "      --exclude=pattern                    exclude packages and classes matching the pattern\n"
+      "      --include-ns=pattern                 show only namespaces matching regex pattern\n"
+      "      --include-package=pattern            equivalent to --include-ns\n"
+      "      --exclude-ns=pattern                 exclude namespaces matching regex pattern\n"
+      "      --exclude-package=pattern            equivalent to --exclude-ns\n"
       "\n"
       "  -t, --output-type=[table|csv|json|html]  report type (default is 'table')\n"
       "  -o, --output=file                        where report to 'file' (make sense when only a single jar is analyzed)\n"
@@ -62,9 +64,11 @@ values, expecting argument to be used multiple times."
        ;; so it can see if there are duplicate entries, e.g. --include=foo --include=foo
        ;; it will receive (validator-fn [foo foo])
        ;;
-       ;; also, if (validator-fn) returns false/nil, consider that as a failure too
+       ;; Also, if (validator-fn) returns false/nil, consider that as a failure too. If (validator-fn)
+       ;; returns a different value, use it in argumens. Useful to get (re-pattern) without compiling
+       ;; regex again.
        (if (fn? validator-fn)
-         (when (validator-fn v)
+         (when-let [v (validator-fn v)]
            (assoc mp key v))
          (assoc mp key v)))
      mp))
@@ -74,7 +78,9 @@ values, expecting argument to be used multiple times."
 (defn- valid-pattern? [p]
   (if (sequential? p)
     ;; if any of elements is nil (failed pattern), mark everything as false
-    (not (some nil? (map valid-pattern? p)))
+    (let [v (map valid-pattern? p)]
+      (when-not (some nil? v)
+        v))
     (try
       (re-pattern p)
       (catch Exception e
@@ -95,8 +101,8 @@ values, expecting argument to be used multiple times."
              (-> (.acceptsAll ["t" "output-type"]) .withRequiredArg)
              (-> (.acceptsAll ["d" "output-dir"]) .withRequiredArg)
              (-> (.acceptsAll ["s" "sort"]) .withRequiredArg)
-             (-> (.acceptsAll ["include"]) .withRequiredArg)
-             (-> (.acceptsAll ["exclude"]) .withRequiredArg))
+             (-> (.acceptsAll ["include-ns" "include-package"]) .withRequiredArg)
+             (-> (.acceptsAll ["exclude-ns" "exclude-package"]) .withRequiredArg))
         ;; these are non-arg options (those not starting with '-') and are
         ;; consider as jar files that are going to be read
         nonopts (.nonOptions op)
@@ -121,8 +127,8 @@ values, expecting argument to be used multiple times."
                              :deps      (.has st "deps")}
                             (value-of st :analyzer "analyzer" false)
                             (value-of st :sort "sort" false)
-                            (value-of st :include "include" true valid-pattern?)
-                            (value-of st :exclude "exclude" true valid-pattern?)
+                            (value-of st :include-ns "include-ns" true valid-pattern?)
+                            (value-of st :exclude-ns "exclude-ns" true valid-pattern?)
                             (value-of st :output "output" false)
                             (value-of st :output-type "output-type" false)
                             (value-of st :output-dir "output-dir" false)))

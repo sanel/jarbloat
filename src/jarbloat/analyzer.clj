@@ -57,9 +57,10 @@
             :deps (accum mps :deps)})
          (group-by :name entries))))
 
-#_(defn- tree-by-ns
+(defn- tree-by-ns
   "Similar to (group-by-ns), but emit a tree where parent node contains metadata like total
-size of children packages and each child node will contain child classes and their size."
+size of children packages and each child node will contain child classes and their size.
+This is used for html output."
   [entries jarsz]
   (let [accum (fn [mps k] (reduce (fn [n e] (+ n (get e k))) 0 mps))]
     ;; Drop entry with k and replace it with k with metadata. Something
@@ -132,11 +133,39 @@ Returns nil on skipped entries or a map with class name and dependencies."
                        ;; module-info.class can be without packages
                        package (->> cls (c/get-package class-analyzer) not-empty)]
               {:name package
-               :deps (map #(path-cut % #"\." ".")
-                          (c/get-deps class-analyzer cls))})
+               :deps (map #(path-cut % #"\." ".") (c/get-deps class-analyzer cls))})
             {:name    (c/get-classname class-analyzer cls {:demunge? (:demunge opts)})
              :package (c/get-package class-analyzer cls)
              :deps    (c/get-deps class-analyzer cls)}))))))
+
+(defn package-filter
+  "Check if (:package mp) matches one of include-re regexes. If matches, returns mp
+so it can be chained further. If exclude-re is present, check if does not match to
+one of those.
+
+The logic here is the following:
+
+ 1. if include-re is present, package name must matche one of regexes
+ 2. if exclude-re is present, package name must not match one of regexes
+ 3. if package name matches both include-re and exclude-re, use include-re
+which means it should be shown."
+  [mp include-re exclude-re]
+  (assert (and (or (nil? include-re) (sequential? include-re))
+               (or (nil? exclude-re) (sequential? exclude-re)))
+          "include-re and exclude-re must be either a list of regexes or nil")
+
+  (if-let [package (:package mp)]
+    (cond
+      (seq (not-empty include-re))
+      (when (some #(re-find % package) include-re)
+        mp)
+
+      (seq (not-empty exclude-re))
+      (when (some #(not (re-find % package)) exclude-re)
+        mp)
+
+      :else mp)
+    mp))
 
 (defn analyze-jar
   "Run jar analysis with the given options."
@@ -152,7 +181,8 @@ Returns nil on skipped entries or a map with class name and dependencies."
         (let [entry-analyzer (if (:deps opts)
                                analyze-entry-deps
                                analyze-entry)
-              entries (->> (map #(entry-analyzer fd ^JarEntry % an sz opts)
+              entries (->> (map #(-> (entry-analyzer fd ^JarEntry % an sz opts)
+                                     (package-filter (:include-ns opts) (:exclude-ns opts)))
                                 (-> fd .entries enumeration-seq))
                            (remove nil?))]
           (if (:deps opts)
@@ -192,10 +222,12 @@ Returns nil on skipped entries or a map with class name and dependencies."
                                 :table)]
               #_(tree-by-ns entries sz)
               (if (:group-ns opts)
-                (p/do-print output-type
+                (p/do-print path
+                            output-type
                             [:package :percent :size :csize]
                             (sort-entries sort-key comparator (group-by-ns entries sz)))
-                (p/do-print output-type
+                (p/do-print path
+                            output-type
                             [:name :package :percent :size :csize :type]
                             (sort-entries sort-key comparator entries)))))))
       (catch Exception e

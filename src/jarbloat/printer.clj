@@ -30,10 +30,17 @@ digraph deps_graph {
 
 (defn do-print
   "Print content depending on print type."
-  [type ks rows]
+  [path type ks rows]
   (case type
     :json (println
-           (json/generate-string (map #(select-keys % ks) rows)
+           (json/generate-string {:name path
+                                  :data (map #(select-keys % ks) rows)}
                                  {:pretty true}))
-    :csv (print-csv ks rows)
-    (pp/print-table ks rows)))
+    :csv (do
+           (println path)
+           (print-csv ks rows))
+    (do
+      ;; print-table will first print newline before start printing table.
+      ;; Because of that, we have to eat that character via \r.
+      (printf "\n%s\r" path)
+      (pp/print-table ks rows))))
