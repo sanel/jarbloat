@@ -1,4 +1,4 @@
-(ns jarbloat.utils-test
+(ns jarbloat.analyzer-test
   (:require [clojure.test :refer :all]
             [jarbloat.analyzer :as a]))
 
