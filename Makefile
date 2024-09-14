@@ -1,6 +1,6 @@
 LEIN         ?= lein
 NATIVE_IMAGE ?= /opt/graalvm/bin/native-image
-BINARY       ?= jarbloat
+BINARY       ?= target/jarbloat
 
 .PHONY: help clean uberjar uberjar-graalvm test repl
 
@@ -30,8 +30,10 @@ repl: ## start clojure repl
 lint: ## run clj-kondo linter
 	$(LEIN) lint
 
-binary: ## create binary by using graalvm
-binary: uberjar-graalvm
+#--trace-object-instantiation=java.util.zip.ZipFile \
+#--trace-class-initialization=org.apache.bcel.util.ClassPath \
+native: ## create binary by using graalvm
+native: uberjar-graalvm
 	$(NATIVE_IMAGE) \
 	--report-unsupported-elements-at-runtime \
 	--initialize-at-run-time=com.sun.jna.platform.win32.User32 \
@@ -41,4 +43,5 @@ binary: uberjar-graalvm
 	-H:+ReportExceptionStackTraces \
 	--initialize-at-build-time \
 	--allow-incomplete-classpath \
+	-O2 \
 	-jar target/jarbloat.jar -H:Name=$(BINARY)

@@ -1,5 +1,5 @@
 (ns jarbloat.analyzer
-  (:require [jarbloat.utils :refer [path-cut pp-bytes update-with-keys]]
+  (:require [jarbloat.utils :refer [path-cut pp-bytes update-with-keys if-graalvm]]
             [jarbloat.printer :as p]
             [jarbloat.class-analyzer :as c])
   (:import [java.util.jar JarFile JarEntry]
@@ -176,7 +176,12 @@ which means it should be shown."
   (let [an (if (or (= "bcel" (:analyzer opts))
                    ;; calculating class dependencies works only with BCEL backend
                    (:deps opts))
-             (c/->BCELAnalyzer)
+             (if-graalvm
+               ;; BCEL analyzer will throw NullPointerException when compiled with GraalVM
+               (throw (Exception.
+                       (str "BCEL analyzer does not work properly with GraalVM (native build).\n"
+                            "For now, please use 'java -jar jarbuild.jar' instead. See https://github.com/sanel/jarbloat/issues/2\n")))
+               (c/->BCELAnalyzer))
              (c/->FastAnalyzer))
         sz (-> path File. .length)]
     (try

@@ -33,7 +33,7 @@ compile it to a standalone binary, install
 [GraalVM](https://www.graalvm.org/) and run:
 
 ```
-make binary NATIVE_IMAGE=<path/to/native-image>
+make native NATIVE_IMAGE=<path/to/native-image>
 ```
 
 ## License
