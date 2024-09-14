@@ -49,6 +49,7 @@
                  (sequential? path)
                  (= 2 (count path))))
             "only string or list accepted as a path")
+
     (let [^InputStream stream (if (string? path) (io/input-stream path) (first path))
           ^String p           (if (string? path) path (second path))]
       (try
