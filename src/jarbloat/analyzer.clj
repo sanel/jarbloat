@@ -180,7 +180,7 @@ which means it should be shown."
                ;; BCEL analyzer will throw NullPointerException when compiled with GraalVM
                (throw (Exception.
                        (str "BCEL analyzer does not work properly with GraalVM (native build).\n"
-                            "For now, please use 'java -jar jarbuild.jar' instead. See https://github.com/sanel/jarbloat/issues/2\n")))
+                            "For now, please use 'java -jar jarbloat.jar' instead. See https://github.com/sanel/jarbloat/issues/2\n")))
                (c/->BCELAnalyzer))
              (c/->FastAnalyzer))
         sz (-> path File. .length)]
