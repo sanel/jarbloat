@@ -57,7 +57,8 @@
             :deps (accum mps :deps)})
          (group-by :name entries))))
 
-(defn- tree-by-ns
+
+#_(defn- tree-by-ns
   "Similar to (group-by-ns), but emit a tree where parent node contains metadata like total
 size of children packages and each child node will contain child classes and their size.
 This is used for html output."
