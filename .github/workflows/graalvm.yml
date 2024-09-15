@@ -2,69 +2,47 @@ name: GraalVM Native Image build
 
 on:
   push:
-    branches: [ master ]
-    tags: [ '*' ]
-
-#on:
-#  push:
-#    tags:
-#      - '*'
-
+    tags:
+      - "^[0-9]+.[0-9]+.[0-9]+$"
 jobs:
-  # create release first where artifacts can be uploaded
-  prep_release:
-    runs-on: ubuntu-latest
+  build_on_windows:
+    runs-on: windows-latest
     steps:
-      - name: Getting project version
-        run: echo "::set-output name=version::$(make project-version)"
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1.5.0
+      - uses: microsoft/setup-msbuild@v1
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 20.3.0
+          native-image: true
+
+      - name: Install dependencies
+        run: |
+          choco install --verbose make
+          choco install --verbose lein
+
+      - name: Build native
+        run: make native
+
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v1.3.3
+        with:
+          version: latest
+          file: target/jarbloat.exe
+          args: '-7'
+
+      - name: Renaming file
+        run: ren target/jarbloat.exe target/jarbloat-windows-amd64.exe
 
       - name: Creating release
-        uses: actions/create-release@v1
-        id: create_release
+        permissions:
+          contents: write
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          draft: false
-          prerelease: false
-          release_name: ${{ steps.version.outputs.version }}
-          #tag_name: ${{ github.ref }}
-          tag_name: 0.0.1
-          #body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+          files: target/*.exe
 
-#  buildOnWindows:
-#    runs-on: windows-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: ilammy/msvc-dev-cmd@v1.5.0
-#      - uses: microsoft/setup-msbuild@v1
-#      - uses: ayltai/setup-graalvm@v1
-#        with:
-#          java-version: 11
-#          graalvm-version: 20.3.0
-#          native-image: true
-#
-#      - name: Install dependencies
-#        run: |
-#          choco install --verbose make
-#          choco install --verbose lein
-#
-#      - name: Build native
-#        run: make native
-#
-#      - name: Run UPX
-#        uses: crazy-max/ghaction-upx@v1.3.3
-#        with:
-#          version: latest
-#          file: target/jarbloat.exe
-#          args: '-7'
-#
-#      - uses: actions/upload-artifact@v4
-#        with:
-#          if-no-files-found: warn
-#          name: package
-#          path: target/*.exe
-#
 #  buildOnMac:
 #    runs-on: macos-latest
 #
@@ -98,7 +76,6 @@ jobs:
 #          path: staging
 
   build_on_linux:
-    needs: prep_release
     runs-on: ubuntu-latest
 
     steps:
@@ -119,20 +96,13 @@ jobs:
           file: target/jarbloat
           args: '-7'
 
-      - name: Upload artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Renaming file
+        run: mv target/jarbloat target/jarbloat-linux-amd64
+
+      - name: Creating release
+        permissions:
+          contents: write
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          upload_url: ${{ jobs.prep_release.steps.create_release.outputs.upload_url }}
-          asset_path: target/jarbloat
-          asset_name: jarbloat-linux-amd64
-          asset_content_type: application/octet-stream
-
-      #- name: Upload artifacts
-      #  run: mkdir staging && cp target/jarbloat staging/jarbloat-linux-amd64
-
-      #- uses: actions/upload-artifact@v4
-      #  with:
-      #    name: package
-      #    path: staging
+          files: target/jarbloat-linux-amd64
