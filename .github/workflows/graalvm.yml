@@ -34,7 +34,7 @@ jobs:
           file: target/jarbloat.exe
           args: '-7'
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           if-no-files-found: warn
           name: package
@@ -67,7 +67,7 @@ jobs:
       - name: Upload artifacts
         run: mkdir staging && cp target/jarbloat staging/jarbloat-mac-amd64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: package
           path: staging
@@ -96,7 +96,7 @@ jobs:
       - name: Upload artifacts
         run: mkdir staging && cp target/jarbloat staging/jarbloat-linux-amd64
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: package
           path: staging
