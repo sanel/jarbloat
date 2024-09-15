@@ -5,6 +5,29 @@ on:
     tags:
       - "*"
 jobs:
+  # generic uberjar
+  build_uberjar:
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ayltai/setup-java@v4
+        with:
+          java-version: 8
+          distribution: 'temurin'
+
+      - name: Build uberjar
+        run: make uberjar
+
+      - name: Creating release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/jarbloat.jar
+
+  # win
   build_on_windows:
     runs-on: windows-latest
     permissions:
@@ -77,7 +100,7 @@ jobs:
 #          path: staging
 
   build_on_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     permissions:
       contents: write
 
