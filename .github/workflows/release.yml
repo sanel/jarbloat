@@ -68,37 +68,39 @@ jobs:
         with:
           files: target/*.exe
 
-#  buildOnMac:
-#    runs-on: macos-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: ayltai/setup-graalvm@v1
-#        with:
-#          java-version: 11
-#          graalvm-version: 20.3.0
-#          native-image: true
-#
-#      - name: Install dependencies
-#        run: |
-#          brew install leiningen
-#
-#      - name: Build native
-#        run: make native
-#
-#      - name: Run UPX
-#        uses: svenstaro/upx-action@v2
-#        with:
-#          file: target/jarbloat
-#          args: '-7'
-#
-#      - name: Upload artifacts
-#        run: mkdir staging && cp target/jarbloat staging/jarbloat-mac-amd64
-#
-#      - uses: actions/upload-artifact@v4
-#        with:
-#          name: package
-#          path: staging
+  # graalvm mac build
+  build_on_mac:
+    runs-on: macos-12
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 20.3.0
+          native-image: true
+
+      - name: Install dependencies
+        run: |
+          brew install leiningen
+
+      - name: Build native
+        run: make native
+
+      - name: Run UPX
+        uses: svenstaro/upx-action@v2
+        with:
+          file: target/jarbloat
+          args: '-7'
+
+      - name: Renaming file
+        run: mv target/jarbloat target/jarbloat-macos13-arm64
+
+      - name: Creating release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: target/jarbloat-mac-amd64
 
   # graalvm linux build
   build_on_linux:
