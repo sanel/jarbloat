@@ -3,7 +3,7 @@ name: GraalVM Native Image build
 on:
   push:
     tags:
-      - "^[0-9]+.[0-9]+.[0-9]+$"
+      - "*"
 jobs:
   build_on_windows:
     runs-on: windows-latest
