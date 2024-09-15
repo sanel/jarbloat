@@ -5,74 +5,99 @@ on:
     branches: [ master ]
     tags: [ '*' ]
 
+#on:
+#  push:
+#    tags:
+#      - '*'
+
 jobs:
-  buildOnWindows:
-    runs-on: windows-latest
-
+  # create release first where artifacts can be uploaded
+  prep_release:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1.5.0
-      - uses: microsoft/setup-msbuild@v1
-      - uses: ayltai/setup-graalvm@v1
+      - name: Getting project version
+        run: echo "::set-output name=version::$(make project-version)"
+
+      - name: Creating release
+        uses: actions/create-release@v1
+        id: create_release
         with:
-          java-version: 11
-          graalvm-version: 20.3.0
-          native-image: true
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          #body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Install dependencies
-        run: |
-          choco install --verbose make
-          choco install --verbose lein
+#  buildOnWindows:
+#    runs-on: windows-latest
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: ilammy/msvc-dev-cmd@v1.5.0
+#      - uses: microsoft/setup-msbuild@v1
+#      - uses: ayltai/setup-graalvm@v1
+#        with:
+#          java-version: 11
+#          graalvm-version: 20.3.0
+#          native-image: true
+#
+#      - name: Install dependencies
+#        run: |
+#          choco install --verbose make
+#          choco install --verbose lein
+#
+#      - name: Build native
+#        run: make native
+#
+#      - name: Run UPX
+#        uses: crazy-max/ghaction-upx@v1.3.3
+#        with:
+#          version: latest
+#          file: target/jarbloat.exe
+#          args: '-7'
+#
+#      - uses: actions/upload-artifact@v4
+#        with:
+#          if-no-files-found: warn
+#          name: package
+#          path: target/*.exe
+#
+#  buildOnMac:
+#    runs-on: macos-latest
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: ayltai/setup-graalvm@v1
+#        with:
+#          java-version: 11
+#          graalvm-version: 20.3.0
+#          native-image: true
+#
+#      - name: Install dependencies
+#        run: |
+#          brew install leiningen
+#
+#      - name: Build native
+#        run: make native
+#
+#      - name: Run UPX
+#        uses: svenstaro/upx-action@v2
+#        with:
+#          file: target/jarbloat
+#          args: '-7'
+#
+#      - name: Upload artifacts
+#        run: mkdir staging && cp target/jarbloat staging/jarbloat-mac-amd64
+#
+#      - uses: actions/upload-artifact@v4
+#        with:
+#          name: package
+#          path: staging
 
-      - name: Build native
-        run: make native
-
-      - name: Run UPX
-        uses: crazy-max/ghaction-upx@v1.3.3
-        with:
-          version: latest
-          file: target/jarbloat.exe
-          args: '-7'
-
-      - uses: actions/upload-artifact@v4
-        with:
-          if-no-files-found: warn
-          name: package
-          path: target/*.exe
-
-  buildOnMac:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ayltai/setup-graalvm@v1
-        with:
-          java-version: 11
-          graalvm-version: 20.3.0
-          native-image: true
-
-      - name: Install dependencies
-        run: |
-          brew install leiningen
-
-      - name: Build native
-        run: make native
-
-      - name: Run UPX
-        uses: svenstaro/upx-action@v2
-        with:
-          file: target/jarbloat
-          args: '-7'
-
-      - name: Upload artifacts
-        run: mkdir staging && cp target/jarbloat staging/jarbloat-mac-amd64
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: package
-          path: staging
-
-  buildOnLinux:
+  build_on_linux:
+    needs: prep_release
     runs-on: ubuntu-latest
 
     steps:
@@ -93,10 +118,20 @@ jobs:
           file: target/jarbloat
           args: '-7'
 
-      - name: Upload artifacts
-        run: mkdir staging && cp target/jarbloat staging/jarbloat-linux-amd64
-
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          name: package
-          path: staging
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/jarbloat
+          asset_name: jarbloat-linux-amd64
+          asset_content_type: application/octet-stream
+
+      #- name: Upload artifacts
+      #  run: mkdir staging && cp target/jarbloat staging/jarbloat-linux-amd64
+
+      #- uses: actions/upload-artifact@v4
+      #  with:
+      #    name: package
+      #    path: staging

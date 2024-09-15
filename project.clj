@@ -12,7 +12,8 @@
   :uberjar-name "jarbloat.jar"
   :jvm-opts ["-Dclojure.main.report=stderr"
              "-Xverify:none"]
-  :aliases {"lint" ["with-profile" "lint" "run" "-m" "clj-kondo.main" "--lint" "src"]}
+  :aliases {"lint" ["with-profile" "lint" "run" "-m" "clj-kondo.main" "--lint" "src"]
+            "project-version" ["run" "-m" "clojure.main" "-e" "(-> \"project.clj\" slurp read-string (nth 2) (.replace \"-SNAPSHOT\" \"\") print)"]}
   :profiles {:uberjar {:aot :all
                        :omit-source true
                        :javac-options ["-g:none" "-Xlint:-options"]
@@ -24,4 +25,3 @@
                                    ;; it needs int?. But I'd like to keep things at Clojure 1.8.0 for now.
                                    [org.clojure/clojure "1.11.1"]]}}
   :main jarbloat.core)
-

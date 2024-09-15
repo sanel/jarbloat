@@ -2,7 +2,7 @@ LEIN         ?= lein
 NATIVE_IMAGE ?= native-image
 BINARY       ?= target/jarbloat
 
-.PHONY: help clean uberjar uberjar-graalvm test repl native lint
+.PHONY: help clean uberjar uberjar-graalvm test repl native lint project-version
 
 help: ## show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -29,6 +29,9 @@ repl: ## start clojure repl
 
 lint: ## run clj-kondo linter
 	$(LEIN) lint
+
+project-version: ## print project version (used by github actions)
+	@$(LEIN) project-version
 
 native: ## create binary by using graalvm
 native: uberjar-graalvm
