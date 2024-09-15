@@ -1,4 +1,4 @@
-name: jarbloat tests
+name: tests
 
 on:
   push:
