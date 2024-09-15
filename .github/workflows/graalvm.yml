@@ -124,7 +124,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ jobs.prep_release.steps.create_release.outputs.upload_url }}
           asset_path: target/jarbloat
           asset_name: jarbloat-linux-amd64
           asset_content_type: application/octet-stream
