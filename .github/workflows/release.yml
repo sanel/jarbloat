@@ -5,7 +5,7 @@ on:
     tags:
       - "*"
 jobs:
-  # generic uberjar
+  # Generic uberjar. It is built without graalvm flags
   build_uberjar:
     runs-on: ubuntu-20.04
     permissions:
@@ -27,7 +27,7 @@ jobs:
         with:
           files: target/jarbloat.jar
 
-  # win
+  # graalvm windows build
   build_on_windows:
     runs-on: windows-latest
     permissions:
@@ -59,7 +59,8 @@ jobs:
           args: '-7'
 
       - name: Renaming file
-        run: ren target/jarbloat.exe target/jarbloat-windows-amd64.exe
+        run: ren jarbloat.exe jarbloat-windows-amd64.exe
+        working-directory: target
 
       - name: Creating release
         uses: softprops/action-gh-release@v2
@@ -99,6 +100,7 @@ jobs:
 #          name: package
 #          path: staging
 
+  # graalvm linux build
   build_on_linux:
     runs-on: ubuntu-20.04
     permissions:
