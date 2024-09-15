@@ -1,8 +1,8 @@
 LEIN         ?= lein
-NATIVE_IMAGE ?= /opt/graalvm/bin/native-image
+NATIVE_IMAGE ?= native-image
 BINARY       ?= target/jarbloat
 
-.PHONY: help clean uberjar uberjar-graalvm test repl
+.PHONY: help clean uberjar uberjar-graalvm test repl native lint
 
 help: ## show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -30,8 +30,6 @@ repl: ## start clojure repl
 lint: ## run clj-kondo linter
 	$(LEIN) lint
 
-#--trace-object-instantiation=java.util.zip.ZipFile \
-#--trace-class-initialization=org.apache.bcel.util.ClassPath \
 native: ## create binary by using graalvm
 native: uberjar-graalvm
 	$(NATIVE_IMAGE) \
