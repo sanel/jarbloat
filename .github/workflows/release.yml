@@ -88,11 +88,12 @@ jobs:
       - name: Build native
         run: make native
 
-      - name: Run UPX
-        uses: svenstaro/upx-action@v2
-        with:
-          file: target/jarbloat
-          args: '-7'
+      # UPX doesn't work on >= Ventura (https://github.com/upx/upx/issues/612)
+      #- name: Run UPX
+      #  uses: svenstaro/upx-action@v2
+      #  with:
+      #    file: target/jarbloat
+      #    args: '-7'
 
       - name: Renaming file
         run: mv target/jarbloat target/jarbloat-darwin-amd64
