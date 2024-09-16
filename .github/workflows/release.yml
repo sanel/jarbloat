@@ -42,7 +42,7 @@ jobs:
           java-version: '11'
           distribution: 'graalvm-community'
           components: 'native-image'
-          version: '20.3.0'
+          version: '22.3.3'
 
       - name: Install dependencies
         run: |
@@ -80,7 +80,7 @@ jobs:
           java-version: '11'
           distribution: 'graalvm-community'
           components: 'native-image'
-          version: '20.3.0'
+          version: '22.3.3'
 
       - name: Install dependencies
         run: |
@@ -118,7 +118,7 @@ jobs:
           java-version: '11'
           distribution: 'graalvm-community'
           components: 'native-image'
-          version: '20.3.0'
+          version: '22.3.3'
 
       - name: Build native
         run: make native
