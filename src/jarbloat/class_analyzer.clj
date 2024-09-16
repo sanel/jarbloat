@@ -90,21 +90,3 @@
                     ;; visitor will store classes with '/' delimiter
                     (some-> s (.replaceAll "/" ".")))))
            (remove nil?)))))
-
-(comment
-
-(let [;o (->FastAnalyzer)
-      o (->BCELAnalyzer)
-      ;path "target/classes/jarbloat/analyzer$group_by_ns$fn__46$fn__50.class"
-      ;path "target/classes/jarbloat/class_analyzer/BCELAnalyzer.class"
-      ;path "target/classes/jarbloat/class_analyzer/ClassAnalyzer.class"
-      path "target/classes/jarbloat/utils$if_graalvm.class"
-      c (load-class o path)
-      ;c (load-class o [(io/input-stream path) path])
-      ]
-  (println "anal   : " (analyzer-name o))
-  (println "package: " (get-package o c))
-  (println "name   : " (get-classname o c {:demunge true}))
-  (println "deps   : " (get-deps o c)))
-
-)

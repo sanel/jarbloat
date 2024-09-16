@@ -18,7 +18,7 @@ Download the latest release from
 run OS independent `jarbloat.jar` with:
 
 ```
-$ java -jar jarbloat.jar [options] <app.jar>
+java -jar jarbloat.jar [options] <app.jar>
 ```
 
 or you can run OS dependant binary with:
