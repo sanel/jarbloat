@@ -10,8 +10,7 @@ Features:
    [org-mode](https://orgmode.org/) files), json, csv and interactive html
  * Support for analyzing the dependency of each class file (within a jar) and
    displaying dependency graph in [Graphviz dot](https://graphviz.org/) format
- * It can be compiled with [GraalVM](https://www.graalvm.org/) for
-   fast startup (for now tested only on Linux)
+ * It can be compiled with [GraalVM](https://www.graalvm.org/) for fast startup
 
 ## Usage
 
