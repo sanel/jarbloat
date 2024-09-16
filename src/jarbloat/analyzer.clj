@@ -1,7 +1,8 @@
 (ns jarbloat.analyzer
   (:require [jarbloat.utils :refer [path-cut pp-bytes update-with-keys if-graalvm]]
             [jarbloat.printer :as p]
-            [jarbloat.class-analyzer :as c])
+            [jarbloat.class-analyzer :as c]
+            [clojure.java.io :as io])
   (:import [java.util.jar JarFile JarEntry]
            [java.io PushbackReader InputStream InputStreamReader File]))
 
@@ -170,6 +171,23 @@ which means it should be shown."
       :else mp)
     mp))
 
+(defn- setup-output
+  "If output was given, return it as is. If dir was given, get basename from
+path, create dir and return dir/path-basename.output-type. If none given, return *out*."
+  [^String path dir output type]
+  (cond
+    dir
+    (let [ext (if (or (nil? type) (= type "table")) "txt" type)
+          d (doto (io/file dir)
+              (.mkdirs))
+          basename (last (.split path File/separator))]
+      (io/writer (io/file d (str basename "." ext))))
+
+    output
+    (-> output io/file io/writer)
+
+    :else *out*))
+
 (defn analyze-jar
   "Run jar analysis with the given options."
   [^String path opts]
@@ -185,59 +203,60 @@ which means it should be shown."
              (c/->FastAnalyzer))
         sz (-> path File. .length)]
     (try
-      (with-open [fd (JarFile. path)]
-        (let [entry-analyzer (if (:deps opts)
-                               analyze-entry-deps
-                               analyze-entry)
-              entries (->> (map #(-> (entry-analyzer fd ^JarEntry % an sz opts)
-                                     (package-filter (:include-ns opts) (:exclude-ns opts)))
-                                (-> fd .entries enumeration-seq))
-                           (remove nil?))]
-          (if (:deps opts)
-            (let [entries (if (:group-ns opts)
-                            (group-by-ns-for-deps entries)
-                            entries)]
-              (p/do-print-dot entries))
-            (let [comparator (if (:sort-asc opts)
-                               #(compare %1 %2)
-                               #(compare %2 %1))
-                  sort-key (case (:sort opts)
-                             "name"    :name
-                             "package" :package
-                             "ns"      :package
-                             "csize"   :csize
-                             ;; default is sort by uncompressed size
-                             :size)
-                  sort-key (if (and (:group-ns opts) (= sort-key :name))
-                             (do
-                               (println
-                                (str "*** I can't sort by 'name' because class names are not visible when"
-                                     " grouped by package. I'm going to use '--sort=package' instead."))
-                               :package)
-                             sort-key)
-                  ;; When we want to pretty-print sizes, first make sure to sort the content
-                  ;; by size key (:size or :csize), then replace entries with updated sizes.
-                  ;; This way we don't have to hold in every map additional pretty-print valies.
-                  sort-entries (if (:pp-sizes opts)
-                                 (fn [k c e]
-                                   (map #(update-with-keys % [:size :csize] pp-bytes)
-                                        (sort-by k c e)))
-                                 sort-by)
-                  output-type (case (:output-type opts)
-                                "csv"  :csv
-                                "json" :json
-                                "html" :html
-                                :table)]
-              #_(tree-by-ns entries sz)
-              (if (:group-ns opts)
-                (p/do-print path
-                            output-type
-                            [:package :percent :size :csize]
-                            (sort-entries sort-key comparator (group-by-ns entries sz)))
-                (p/do-print path
-                            output-type
-                            [:name :package :percent :size :csize :type]
-                            (sort-entries sort-key comparator entries)))))))
+      (binding [*out* (setup-output path (:output-dir opts) (:output opts) (:output-type opts))]
+        (with-open [fd (JarFile. path)]
+          (let [entry-analyzer (if (:deps opts)
+                                 analyze-entry-deps
+                                 analyze-entry)
+                entries (->> (map #(-> (entry-analyzer fd ^JarEntry % an sz opts)
+                                       (package-filter (:include-ns opts) (:exclude-ns opts)))
+                                  (-> fd .entries enumeration-seq))
+                             (remove nil?))]
+            (if (:deps opts)
+              (let [entries (if (:group-ns opts)
+                              (group-by-ns-for-deps entries)
+                              entries)]
+                (p/do-print-dot entries))
+              (let [comparator (if (:sort-asc opts)
+                                 #(compare %1 %2)
+                                 #(compare %2 %1))
+                    sort-key (case (:sort opts)
+                               "name"    :name
+                               "package" :package
+                               "ns"      :package
+                               "csize"   :csize
+                               ;; default is sort by uncompressed size
+                               :size)
+                    sort-key (if (and (:group-ns opts) (= sort-key :name))
+                               (do
+                                 (println
+                                  (str "*** I can't sort by 'name' because class names are not visible when"
+                                       " grouped by package. I'm going to use '--sort=package' instead."))
+                                 :package)
+                               sort-key)
+                    ;; When we want to pretty-print sizes, first make sure to sort the content
+                    ;; by size key (:size or :csize), then replace entries with updated sizes.
+                    ;; This way we don't have to hold in every map additional pretty-print valies.
+                    sort-entries (if (:pp-sizes opts)
+                                   (fn [k c e]
+                                     (map #(update-with-keys % [:size :csize] pp-bytes)
+                                          (sort-by k c e)))
+                                   sort-by)
+                    output-type (case (:output-type opts)
+                                  "csv"  :csv
+                                  "json" :json
+                                  "html" :html
+                                  :table)]
+                #_(tree-by-ns entries sz)
+                (if (:group-ns opts)
+                  (p/do-print path
+                              output-type
+                              [:package :percent :size :csize]
+                              (sort-entries sort-key comparator (group-by-ns entries sz)))
+                  (p/do-print path
+                              output-type
+                              [:name :package :percent :size :csize :type]
+                              (sort-entries sort-key comparator entries))))))))
       (catch Exception e
         (printf "Error loading %s: %s\n" path (.getMessage e))
         (flush)))))
