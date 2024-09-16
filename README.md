@@ -14,16 +14,23 @@ Features:
 
 ## Usage
 Download the latest release from
-[releases](https://github.com/sanel/jarbloat/releases) page.
+[releases](https://github.com/sanel/jarbloat/releases) page. You can
+run OS independent `jarbloat.jar` with:
 
-You can run OS independent `jarbloat.jar` with:
 ```
 $ java -jar jarbloat.jar [options] <app.jar>
 ```
 
 or you can run OS dependant binary with:
 ```
-jarbloat-OS-platform [options] <app.jar>
+# linux
+jarbloat-linux-amd64 [options] <app.jar>
+
+# macos
+jarbloat-darwin-amd64 [options] <app.jar>
+
+# windows
+jarbloat-windows-amd64.exe [options] <app.jar>
 ```
 
 ## Compilation
