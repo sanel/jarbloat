@@ -13,9 +13,17 @@ Features:
  * It can be compiled with [GraalVM](https://www.graalvm.org/) for fast startup
 
 ## Usage
+Download the latest release from
+[releases](https://github.com/sanel/jarbloat/releases) page.
 
+You can run OS independent `jarbloat.jar` with:
 ```
 $ java -jar jarbloat.jar [options] <app.jar>
+```
+
+or you can run OS dependant binary with:
+```
+jarbloat-OS-platform [options] <app.jar>
 ```
 
 ## Compilation
@@ -34,6 +42,9 @@ compile it to a standalone binary, install
 ```
 make native NATIVE_IMAGE=<path/to/native-image>
 ```
+
+Github Actions will automatically create OS dependent binaries for
+every new release.
 
 ## License
 
